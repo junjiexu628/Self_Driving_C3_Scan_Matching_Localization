@@ -120,9 +120,9 @@ Eigen::Matrix4d NDT(PointCloudT::Ptr mapCloud, PointCloudT::Ptr source, Pose sta
   pcl::NormalDistributionsTransform<PointT,PointT> ndt;
   
   ndt.setMaximumIterations(iterations);
-  ndt.setTransformationEpsilon(1e-8);
-  ndt.setStepSize(1);
-  ndt.setResolution(1);
+  ndt.setTransformationEpsilon(1e-3);
+  //ndt.setStepSize(1);
+  ndt.setResolution(5);
   ndt.setInputSource(source);
   ndt.setInputTarget(mapCloud);
   
@@ -278,7 +278,7 @@ int main(){
 			// TODO: (Filter scan using voxel filter)
           pcl::VoxelGrid<PointT> vg;
           vg.setInputCloud(scanCloud);
-          double filterRes = 2.0;
+          double filterRes = 1.0;
           vg.setLeafSize(filterRes,filterRes,filterRes);
           vg.filter(*cloudFiltered);
           
