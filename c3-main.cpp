@@ -105,7 +105,7 @@ Eigen::Matrix4d ICP(pcl::PointCloud<PointT>::Ptr target, pcl::PointCloud<PointT>
 }
 
 //define NDT function
-Eigen::Matrix4d NDT(pcl::NormalDistributionsTransform<PointT,PointT> ndt, PointCloudT::Ptr source, Pose startPose, int iterations)
+Eigen::Matrix4d NDT(PointCloudT::Ptr mapCloud, PointCloudT::Ptr source, Pose startPose, int iterations)
 {
   //Eigen::Matrix4d transformation_matrix = Eigen::Matrix4d::Identity(4,4);
   
@@ -117,10 +117,16 @@ Eigen::Matrix4d NDT(pcl::NormalDistributionsTransform<PointT,PointT> ndt, PointC
                                            startPose.position.y, startPose.position.z).cast<float>();
   
   //set the parameters of ndt
-  PointCloudT::Ptr ndt_cloud (new PointCloudT);
+  pcl::NormalDistributionsTransform<PointT,PointT> ndt;
   
   ndt.setMaximumIterations(iterations);
-  ndt.setInputTarget(source);
+  ndt.setTransformationEpsilon(1e-8);
+  ndt.setStepSize(1);
+  ndt.setResolution(1);
+  ndt.setInputSource(source);
+  ndt.setInputTarget(mapCloud);
+  
+  PointCloudT::Ptr ndt_cloud (new PointCloudT);
   ndt.align(*ndt_cloud, init_guess);
   
   //get the final transformation
@@ -272,22 +278,20 @@ int main(){
 			// TODO: (Filter scan using voxel filter)
           pcl::VoxelGrid<PointT> vg;
           vg.setInputCloud(scanCloud);
-          double filterRes = 0.5;
+          double filterRes = 2.0;
           vg.setLeafSize(filterRes,filterRes,filterRes);
           vg.filter(*cloudFiltered);
           
           //NDT define only for NDT method
-          pcl::NormalDistributionsTransform<PointT,PointT> ndt;
-          ndt.setTransformationEpsilon(1e-6);
-          ndt.setStepSize(1);
-          ndt.setResolution(1);
-          ndt.setInputTarget(mapCloud);
+          //pcl::NormalDistributionsTransform<PointT,PointT> ndt;
+         
+          //ndt.setInputTarget(mapCloud);
           
 
 			// TODO: Find pose transform by using ICP or NDT matching
 			// define the ICP and NDT method for the comparison
           //Eigen::Matrix4d transform = ICP(mapCloud, cloudFiltered, pose, 30);
-          Eigen::Matrix4d transform = NDT(ndt,cloudFiltered,pose,30);
+          Eigen::Matrix4d transform = NDT(mapCloud,cloudFiltered,pose,100);
           pose = getPose(transform);
           
 
